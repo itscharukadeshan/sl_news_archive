@@ -11,7 +11,5 @@ export async function archive(url: string) {
   ) {
     return await adaderana(url);
   }
-  throw new Error(
-    "Invalid URL: url must be one of sinhala.adaderana.lk/news_archive.php, tamil.adaderana.lk/news_archive.php, adaderana.lk/news_archive.php"
-  );
+  throw new Error("Invalid URL: check the docs for valid URLs and try again.");
 }

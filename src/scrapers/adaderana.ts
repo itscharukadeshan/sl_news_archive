@@ -1,6 +1,7 @@
 /** @format */
-import puppeteer, { Browser, Page } from "puppeteer";
+import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
+import moment from "moment";
 
 const browserWSEndpoint = BROWSERLESS_URL;
 
@@ -17,27 +18,51 @@ const adaderana = async (url: string) => {
     const results = stories.map((story) => {
       const titleElement =
         story.querySelector("h4 a") || story.querySelector("h2 a");
+
       const title = titleElement?.textContent?.trim() || "No title";
       const href = titleElement?.getAttribute("href") || "";
 
-      const byline =
-        story.querySelector("p")?.textContent?.trim() || "No byline";
+      const byline = (
+        story.querySelector("p")?.textContent?.trim() || "No byline"
+      )
+        .replace(/MORE\.\.+$/, "")
+        .trim();
 
-      const timestamp =
+      const timestamp = (
         story.querySelector(".comments span")?.textContent?.trim() ||
-        "No timestamp";
+        "No timestamp"
+      )
+        .replace(/^\s*\|/, "")
+        .trim();
 
       return {
         title,
-        href,
+        url: href,
         byline,
         timestamp,
       };
     });
 
-    return JSON.stringify(results);
+    return results;
   });
-  return JSON.parse(items);
+
+  const scrapedData = items;
+
+  const parsedUrl = new URL(url);
+
+  const origin = parsedUrl.origin;
+  const pathname = parsedUrl.pathname.split("/");
+
+  pathname.pop();
+
+  const baseUrl = `${origin}/${pathname.join("/")}`;
+
+  const updatedData = scrapedData.map((item) => ({
+    ...item,
+    baseUrl,
+  }));
+
+  return updatedData;
 };
 
 export default adaderana;
