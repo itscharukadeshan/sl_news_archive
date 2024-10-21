@@ -1,7 +1,7 @@
 /** @format */
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
-import moment from "moment";
+// import convertToISO from "../services/time";
 
 const browserWSEndpoint = BROWSERLESS_URL;
 
@@ -57,10 +57,17 @@ const adaderana = async (url: string) => {
 
   const baseUrl = `${origin}/${pathname.join("/")}`;
 
-  const updatedData = scrapedData.map((item) => ({
-    ...item,
-    baseUrl,
-  }));
+  const updatedData = scrapedData.map((item) => {
+    const timestamp = item.timestamp;
+
+    // const isoTimestamp = convertToISO(timestamp, "Asia/Colombo");
+
+    return {
+      ...item,
+      // isoTimestamp,
+      baseUrl,
+    };
+  });
 
   return updatedData;
 };
