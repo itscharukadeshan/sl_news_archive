@@ -2,7 +2,7 @@
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
 // import convertToISO from "../services/time";
-
+import { getBaseUrl } from "../services/url";
 const browserWSEndpoint = BROWSERLESS_URL;
 
 const adaderana = async (url: string) => {
@@ -12,7 +12,7 @@ const adaderana = async (url: string) => {
     waitUntil: "domcontentloaded",
   });
 
-  const items = await page.evaluate(() => {
+  const articles = await page.evaluate(() => {
     const stories = [...document.querySelectorAll(".story-text")];
 
     const results = stories.map((story) => {
@@ -46,24 +46,17 @@ const adaderana = async (url: string) => {
     return results;
   });
 
-  const scrapedData = items;
+  const scrapedData = articles;
 
-  const parsedUrl = new URL(url);
+  const baseUrl = getBaseUrl(url) || "";
 
-  const origin = parsedUrl.origin;
-  const pathname = parsedUrl.pathname.split("/");
-
-  pathname.pop();
-
-  const baseUrl = `${origin}/${pathname.join("/")}`;
-
-  const updatedData = scrapedData.map((item) => {
-    const timestamp = item.timestamp;
+  const updatedData = scrapedData.map((article) => {
+    const timestamp = article.timestamp;
 
     // const isoTimestamp = convertToISO(timestamp, "Asia/Colombo");
 
     return {
-      ...item,
+      ...article,
       // isoTimestamp,
       baseUrl,
     };

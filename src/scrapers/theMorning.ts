@@ -2,6 +2,7 @@
 
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
+import { getBaseUrl } from "../services/url";
 
 const browserWSEndpoint = BROWSERLESS_URL;
 
@@ -27,8 +28,7 @@ const theMorning = async (url: string) => {
     (groups) =>
       groups.map((group) => {
         const headlineElement = group.querySelector("a h2");
-        let headline = headlineElement;
-        let title: string;
+        let title = "";
 
         if (headlineElement?.textContent) {
           title = headlineElement.textContent.trim();
@@ -38,25 +38,26 @@ const theMorning = async (url: string) => {
         const href = linkElement ? linkElement.getAttribute("href") : null;
 
         const timestampElement = group.querySelector("p.text-grey-base");
-        let timestamp: string = "";
+        let timestamp = "";
 
         if (timestampElement?.textContent) {
           timestamp = timestampElement.textContent.trim();
         }
 
-        return { headline, href, timestamp };
+        return { title, href, timestamp };
       })
   );
 
+  const baseUrl = getBaseUrl(url);
+
   const results = articles.map((article) => ({
-    headline: article.headline,
+    title: article.title,
     href: article.href,
     timestamp: article.timestamp,
+    baseUrl,
   }));
 
-  return {
-    results,
-  };
+  return results;
 };
 
 export default theMorning;
