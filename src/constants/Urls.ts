@@ -6,4 +6,6 @@ export enum Urls {
   ARUNA = "https://www.aruna.lk/categories/latest-news",
   THE_MORNING = "https://www.themorning.lk/categories/news",
   THAMILAN = "https://www.thamilan.lk/",
+  THINAKARAN = "https://www.thinakaran.lk/?s=",
+  DINAMINA = "https://www.dinamina.lk/?s=",
 }
