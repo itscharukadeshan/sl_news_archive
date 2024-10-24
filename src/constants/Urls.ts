@@ -11,4 +11,5 @@ export enum Urls {
   DAILY_MIRROR = "https://www.dailymirror.lk/latest-news/108",
   TAMIL_MIRROR = "https://www.tamilmirror.lk/news/175",
   LANKADEEPA = "https://www.lankadeepa.lk/latest-news/1",
+  ISLAND = "https://island.lk/?s=",
 }
