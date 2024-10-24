@@ -8,4 +8,7 @@ export enum Urls {
   THAMILAN = "https://www.thamilan.lk/",
   THINAKARAN = "https://www.thinakaran.lk/?s=",
   DINAMINA = "https://www.dinamina.lk/?s=",
+  DAILY_MIRROR = "https://www.dailymirror.lk/latest-news/108",
+  TAMIL_MIRROR = "https://www.tamilmirror.lk/news/175",
+  LANKADEEPA = "https://www.lankadeepa.lk/latest-news/1",
 }
