@@ -4,6 +4,7 @@ import { Urls } from "../constants/Urls";
 import ada from "../scrapers/ada";
 import adaderana from "../scrapers/adaderana";
 import dailyMirror from "../scrapers/dailyMirror";
+import economyNext from "../scrapers/economynext";
 import scrapeIsland from "../scrapers/island";
 import lankadeepa from "../scrapers/lankadeepa";
 import tamilMirror from "../scrapers/tamilMirror";
@@ -31,6 +32,8 @@ export async function archive(url: string) {
     return await scrapeIsland(url);
   } else if (url === Urls.LANKADEEPA) {
     return await lankadeepa(url);
+  } else if (url === Urls.ECONOMY_NEXT) {
+    return await economyNext(url);
   } else if (url === Urls.ADA) {
     return await ada(url);
   } else if (url === Urls.THINAKARAN || url === Urls.DINAMINA) {

@@ -13,4 +13,5 @@ export enum Urls {
   LANKADEEPA = "https://www.lankadeepa.lk/latest-news/1",
   ISLAND = "https://island.lk/?s=",
   ADA = "https://www.ada.lk/latest-news/11",
+  ECONOMY_NEXT = "https://economynext.com/more-news",
 }
