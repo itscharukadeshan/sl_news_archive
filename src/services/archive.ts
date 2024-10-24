@@ -1,6 +1,7 @@
 /** @format */
 
 import { Urls } from "../constants/Urls";
+import ada from "../scrapers/ada";
 import adaderana from "../scrapers/adaderana";
 import dailyMirror from "../scrapers/dailyMirror";
 import scrapeIsland from "../scrapers/island";
@@ -30,6 +31,8 @@ export async function archive(url: string) {
     return await scrapeIsland(url);
   } else if (url === Urls.LANKADEEPA) {
     return await lankadeepa(url);
+  } else if (url === Urls.ADA) {
+    return await ada(url);
   } else if (url === Urls.THINAKARAN || url === Urls.DINAMINA) {
     return await thinakaran(url);
   } else {
