@@ -4,6 +4,7 @@ import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
+import normalizeTime from "../utils/normalizeTime";
 
 const browserWSEndpoint = BROWSERLESS_URL;
 
@@ -53,12 +54,14 @@ const theMorning = async (url: string) => {
 
   const results = articles.map((article) => {
     const checkSum = generateChecksum(article.title, article.href as string);
+    const isoTimestamp = normalizeTime(article.timestamp);
     return {
       title: article.title,
       href: article.href,
       timestamp: article.timestamp,
       baseUrl,
       checkSum,
+      isoTimestamp,
     };
   });
 

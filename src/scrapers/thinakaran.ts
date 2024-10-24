@@ -3,6 +3,7 @@ import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
+import normalizeTime from "../utils/normalizeTime";
 const browserWSEndpoint = BROWSERLESS_URL;
 
 const thinakaran = async (url: string) => {
@@ -34,6 +35,7 @@ const thinakaran = async (url: string) => {
     timestamp: string;
     checksum: string;
     baseUrl: string;
+    isoTimestamp: string;
   }> = [];
 
   try {
@@ -49,8 +51,10 @@ const thinakaran = async (url: string) => {
         const checksum = generateChecksum(article.title, article.href);
         const baseUrl = getBaseUrl(url);
 
+        const isoTimestamp = normalizeTime(article.timestamp);
+
         if (!articles.some((existing) => existing.checksum === checksum)) {
-          articles.push({ ...article, checksum, baseUrl });
+          articles.push({ ...article, checksum, baseUrl, isoTimestamp });
         }
       });
 

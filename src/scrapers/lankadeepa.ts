@@ -32,12 +32,6 @@ const lankadeepa = async (baseUrl: string) => {
           const dateElement = article.querySelector(
             ".f1-s-4.cl8.hov-cl10.trans-03.timec"
           );
-          const viewsElement = article.querySelector(
-            ".f1-s-3.float-right.timec.p-t-6"
-          );
-          const commentsElement = article.querySelector(
-            ".f1-s-3.m-rl-3.float-right.timec.p-t-6"
-          );
 
           const title = titleElement?.textContent?.trim() || "No title";
           const url = linkElement?.href || "";
@@ -49,7 +43,7 @@ const lankadeepa = async (baseUrl: string) => {
             url,
             title,
             byline,
-            date,
+            timestamp: date,
           };
         });
       });
@@ -59,7 +53,7 @@ const lankadeepa = async (baseUrl: string) => {
 
     const updatedData = allItems.map((article) => {
       const checkSum = generateChecksum(article.title, article.url);
-      const isoTimestamp = normalizeTime(article.date || "No timestamp");
+      const isoTimestamp = normalizeTime(article.timestamp || "No timestamp");
 
       return {
         ...article,
