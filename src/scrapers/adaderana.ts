@@ -4,6 +4,7 @@ import { BROWSERLESS_URL } from "../config";
 // import convertToISO from "../services/time";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
+import normalizeTime from "../utils/normalizeTime";
 const browserWSEndpoint = BROWSERLESS_URL;
 
 const adaderana = async (url: string) => {
@@ -54,12 +55,11 @@ const adaderana = async (url: string) => {
   const updatedData = scrapedData.map((article) => {
     const timestamp = article.timestamp;
     const checkSum = generateChecksum(article.title, article.url);
-
-    // const isoTimestamp = convertToISO(timestamp, "Asia/Colombo");
+    const isoTimestamp = normalizeTime(timestamp);
 
     return {
       ...article,
-      // isoTimestamp,
+      isoTimestamp,
       baseUrl,
       checkSum,
     };
