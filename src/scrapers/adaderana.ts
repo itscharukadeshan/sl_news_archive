@@ -1,7 +1,6 @@
 /** @format */
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
-// import convertToISO from "../services/time";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
@@ -53,7 +52,7 @@ const adaderana = async (url: string) => {
   const baseUrl = getBaseUrl(url) || "";
 
   const updatedData = scrapedData.map((article) => {
-    const timestamp = article.timestamp;
+    const timestamp = article.timestamp as string;
     const checkSum = generateChecksum(article.title, article.url);
     const isoTimestamp = normalizeTime(timestamp);
 
