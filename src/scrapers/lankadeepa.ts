@@ -41,14 +41,14 @@ const lankadeepa = async (baseUrl: string) => {
 
           const title = titleElement?.textContent?.trim() || "No title";
           const url = linkElement?.href || "";
-          const summary =
+          const byline =
             summaryElement?.textContent?.trim() || "No summary available";
           const date = dateElement?.textContent?.trim() || "No date available";
 
           return {
             url,
             title,
-            summary,
+            byline,
             date,
           };
         });
@@ -64,6 +64,7 @@ const lankadeepa = async (baseUrl: string) => {
       return {
         ...article,
         isoTimestamp,
+
         baseUrl,
         checkSum,
       };
