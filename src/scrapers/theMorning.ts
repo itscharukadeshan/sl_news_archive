@@ -3,6 +3,7 @@
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
 import { getBaseUrl } from "../services/url";
+import { generateChecksum } from "../utils/generateChecksum";
 
 const browserWSEndpoint = BROWSERLESS_URL;
 
@@ -50,12 +51,16 @@ const theMorning = async (url: string) => {
 
   const baseUrl = getBaseUrl(url);
 
-  const results = articles.map((article) => ({
-    title: article.title,
-    href: article.href,
-    timestamp: article.timestamp,
-    baseUrl,
-  }));
+  const results = articles.map((article) => {
+    const checkSum = generateChecksum(article.title, article.href as string);
+    return {
+      title: article.title,
+      href: article.href,
+      timestamp: article.timestamp,
+      baseUrl,
+      checkSum,
+    };
+  });
 
   return results;
 };

@@ -3,6 +3,7 @@ import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
 // import convertToISO from "../services/time";
 import { getBaseUrl } from "../services/url";
+import { generateChecksum } from "../utils/generateChecksum";
 const browserWSEndpoint = BROWSERLESS_URL;
 
 const adaderana = async (url: string) => {
@@ -52,6 +53,7 @@ const adaderana = async (url: string) => {
 
   const updatedData = scrapedData.map((article) => {
     const timestamp = article.timestamp;
+    const checkSum = generateChecksum(article.title, article.url);
 
     // const isoTimestamp = convertToISO(timestamp, "Asia/Colombo");
 
@@ -59,6 +61,7 @@ const adaderana = async (url: string) => {
       ...article,
       // isoTimestamp,
       baseUrl,
+      checkSum,
     };
   });
 

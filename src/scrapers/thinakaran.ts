@@ -1,8 +1,8 @@
 /** @format */
 import puppeteer from "puppeteer";
 import { BROWSERLESS_URL } from "../config";
-// import convertToISO from "../services/time";
 import { getBaseUrl } from "../services/url";
+import { generateChecksum } from "../utils/generateChecksum";
 const browserWSEndpoint = BROWSERLESS_URL;
 
 const thinakaran = async (url: string) => {
@@ -32,6 +32,8 @@ const thinakaran = async (url: string) => {
     title: string;
     href: string;
     timestamp: string;
+    checksum: string;
+    baseUrl: string;
   }> = [];
 
   try {
@@ -44,8 +46,11 @@ const thinakaran = async (url: string) => {
       const newArticles = await scrapeArticles();
 
       newArticles.forEach((article) => {
-        if (!articles.some((existing) => existing.title === article.title)) {
-          articles.push(article);
+        const checksum = generateChecksum(article.title, article.href);
+        const baseUrl = getBaseUrl(url);
+
+        if (!articles.some((existing) => existing.checksum === checksum)) {
+          articles.push({ ...article, checksum, baseUrl });
         }
       });
 
@@ -72,7 +77,6 @@ const thinakaran = async (url: string) => {
     }
   } catch (error) {
     console.error("Error during scraping:", error);
-    console.log("Captured articles so far:", articles);
     return articles;
   } finally {
     await browser.close();
