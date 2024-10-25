@@ -1,16 +1,8 @@
 /** @format */
 
-function getBaseUrl(url: string) {
+function getBaseUrl(url: string): string {
   const parsedUrl = new URL(url);
-
-  const origin = parsedUrl.origin;
-  const pathname = parsedUrl.pathname.split("/");
-
-  pathname.pop();
-
-  const baseUrl = `${origin}/${pathname.join("/")}`;
-
-  return baseUrl;
+  return parsedUrl.origin;
 }
 
 export { getBaseUrl };
