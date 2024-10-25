@@ -5,4 +5,9 @@ function getBaseUrl(url: string): string {
   return parsedUrl.origin;
 }
 
+function getParsedUrl(url: string): URL {
+  const parsedUrl = new URL(url);
+  return parsedUrl;
+}
+
 export { getBaseUrl };
