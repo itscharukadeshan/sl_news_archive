@@ -17,21 +17,21 @@ const thinakaran = async (url: string) => {
       return articleElements.map((article: Element) => {
         const title =
           article.querySelector(".penci-entry-title a")?.textContent || "";
-        const href =
+        const url =
           article.querySelector(".penci-entry-title a")?.getAttribute("href") ||
           "";
         const timestamp =
           article.querySelector("time.entry-date")?.getAttribute("datetime") ||
           "";
 
-        return { title, href, timestamp };
+        return { title, url, timestamp };
       });
     });
   };
 
   const articles: Array<{
     title: string;
-    href: string;
+    url: string;
     timestamp: string;
     checksum: string;
     baseUrl: string;
@@ -48,7 +48,7 @@ const thinakaran = async (url: string) => {
       const newArticles = await scrapeArticles();
 
       newArticles.forEach((article) => {
-        const checksum = generateChecksum(article.title, article.href);
+        const checksum = generateChecksum(article.title, article.url);
         const baseUrl = getBaseUrl(url);
 
         const isoTimestamp = normalizeTime(article.timestamp);

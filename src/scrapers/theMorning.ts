@@ -55,9 +55,11 @@ const theMorning = async (url: string) => {
   const results = articles.map((article) => {
     const checkSum = generateChecksum(article.title, article.href as string);
     const isoTimestamp = normalizeTime(article.timestamp);
+    const url = `${baseUrl}${article.href}`;
     return {
       title: article.title,
       href: article.href,
+      url,
       timestamp: article.timestamp,
       baseUrl,
       checkSum,
