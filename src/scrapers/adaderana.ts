@@ -38,7 +38,7 @@ const adaderana = async (url: string) => {
 
       return {
         title,
-        url: href,
+        href,
         byline,
         timestamp,
       };
@@ -53,12 +53,28 @@ const adaderana = async (url: string) => {
 
   const updatedData = scrapedData.map((article) => {
     const timestamp = article.timestamp as string;
-    const checkSum = generateChecksum(article.title, article.url);
+    const checkSum = generateChecksum(article.title, article.href);
     const isoTimestamp = normalizeTime(timestamp);
+
+    if (
+      baseUrl === "https://sinhala.adaderana.lk" ||
+      baseUrl === "https://tamil.adaderana.lk"
+    ) {
+      const url = `${baseUrl}/${article.href}`;
+
+      return {
+        ...article,
+        url,
+        isoTimestamp,
+        baseUrl,
+        checkSum,
+      };
+    }
 
     return {
       ...article,
       isoTimestamp,
+      url: article.href,
       baseUrl,
       checkSum,
     };
