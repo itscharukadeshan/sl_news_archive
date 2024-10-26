@@ -15,7 +15,7 @@ import tamilMirror from "../scrapers/tamilMirror";
 import theMorning from "../scrapers/theMorning";
 import thinakaran from "../scrapers/thinakaran";
 
-import { getNameFromUrl } from "./url";
+import { getBaseUrl, getNameFromUrl } from "./url";
 import { saveJsonToFile } from "../utils/saveData";
 
 const MAX_RETRIES = 3;
@@ -70,7 +70,8 @@ export async function archiveAll() {
   const results: { [key: string]: any } = {};
 
   for (const url of Object.values(Urls)) {
-    console.log(`Archiving data from URL: ${url}`);
+    const baseUrl = getBaseUrl(url);
+    console.log(`Archiving data from URL: ${baseUrl}`);
     const formattedUrl = getNameFromUrl(url);
     const result = await retryFetch(() => archive(url), MAX_RETRIES);
     results[formattedUrl] = result;
