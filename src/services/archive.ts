@@ -1,6 +1,10 @@
 /** @format */
 
+import path from "path";
+import fs from "fs";
+
 import { Urls } from "../constants/Urls";
+
 import ada from "../scrapers/ada";
 import adaderana from "../scrapers/adaderana";
 import dailyMirror from "../scrapers/dailyMirror";
@@ -10,7 +14,9 @@ import lankadeepa from "../scrapers/lankadeepa";
 import tamilMirror from "../scrapers/tamilMirror";
 import theMorning from "../scrapers/theMorning";
 import thinakaran from "../scrapers/thinakaran";
+
 import { getNameFromUrl } from "./url";
+import { saveJsonToFile } from "../utils/saveData";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
@@ -69,6 +75,13 @@ export async function archiveAll() {
     const result = await retryFetch(() => archive(url), MAX_RETRIES);
     results[formattedUrl] = result;
   }
+
+  const dataDir = path.join(__dirname, "../data");
+  const filePath = path.join(dataDir, "archive-all.json");
+
+  fs.mkdirSync(dataDir, { recursive: true });
+
+  await saveJsonToFile(results, filePath);
 
   return results;
 }
