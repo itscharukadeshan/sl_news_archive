@@ -33,7 +33,7 @@ const thinakaran = async (url: string) => {
     title: string;
     url: string;
     timestamp: string;
-    checksum: string;
+    checkSum: string;
     baseUrl: string;
     isoTimestamp: string;
   }> = [];
@@ -48,13 +48,13 @@ const thinakaran = async (url: string) => {
       const newArticles = await scrapeArticles();
 
       newArticles.forEach((article) => {
-        const checksum = generateChecksum(article.title, article.url);
+        const checkSum = generateChecksum(article.title, article.url);
         const baseUrl = getBaseUrl(url);
 
         const isoTimestamp = normalizeTime(article.timestamp);
 
-        if (!articles.some((existing) => existing.checksum === checksum)) {
-          articles.push({ ...article, checksum, baseUrl, isoTimestamp });
+        if (!articles.some((existing) => existing.checkSum === checkSum)) {
+          articles.push({ ...article, checkSum, baseUrl, isoTimestamp });
         }
       });
 
