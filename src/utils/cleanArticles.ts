@@ -1,14 +1,30 @@
 /** @format */
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const inputFilePath = "../data/archive-all.json";
-const checkSumFilePath = "../data/checkSums.json";
-const archiveDir = "../data/archive";
-const duplicateFilePath = "../data/duplicates.json";
+const inputFilePath = path.join(__dirname, "../data/archive-all.json");
+const checkSumFilePath = path.join(__dirname, "../data/checkSums.json");
+const archiveDir = path.join(__dirname, "../data/archive");
+const duplicateFilePath = path.join(__dirname, "../data/duplicates.json");
 
-function loadCheckSums() {
+interface Article {
+  title?: string;
+  checkSum?: string;
+  [key: string]: any;
+}
+
+interface ArchiveData {
+  [source: string]: {
+    data: Article[];
+  };
+}
+
+interface DuplicateData {
+  [source: string]: Article[];
+}
+
+function loadCheckSums(): Set<string> {
   if (fs.existsSync(checkSumFilePath)) {
     const data = fs.readFileSync(checkSumFilePath, "utf-8");
     return new Set(JSON.parse(data));
@@ -16,7 +32,7 @@ function loadCheckSums() {
   return new Set();
 }
 
-function saveCheckSums(checkSums) {
+function saveCheckSums(checkSums: Set<string>): void {
   fs.writeFileSync(
     checkSumFilePath,
     JSON.stringify(Array.from(checkSums), null, 2),
@@ -24,7 +40,7 @@ function saveCheckSums(checkSums) {
   );
 }
 
-function loadExistingData(sourceDir, date) {
+function loadExistingData(sourceDir: string, date: string): Article[] {
   const filePath = path.join(sourceDir, `archive_${date}.json`);
   if (fs.existsSync(filePath)) {
     const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
@@ -33,7 +49,7 @@ function loadExistingData(sourceDir, date) {
   return [];
 }
 
-async function cleanArchive() {
+async function cleanArchive(): Promise<void> {
   const existingCheckSums = loadCheckSums();
   const newCheckSums = new Set(existingCheckSums);
 
@@ -42,8 +58,10 @@ async function cleanArchive() {
     return;
   }
 
-  const archiveData = JSON.parse(fs.readFileSync(inputFilePath, "utf-8"));
-  const duplicates = {};
+  const archiveData: ArchiveData = JSON.parse(
+    fs.readFileSync(inputFilePath, "utf-8")
+  );
+  const duplicates: DuplicateData = {};
 
   const currentDate = new Date().toISOString().split("T")[0];
   const currentDateObj = new Date(currentDate);
@@ -121,3 +139,5 @@ async function cleanArchive() {
 cleanArchive().catch((error) =>
   console.error("Error cleaning archive:", error)
 );
+
+export default cleanArchive;

@@ -17,6 +17,7 @@ import thinakaran from "../scrapers/thinakaran";
 
 import { getBaseUrl, getNameFromUrl } from "./url";
 import { saveJsonToFile } from "../utils/saveData";
+import cleanArchive from "../utils/cleanArticles";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
@@ -83,6 +84,8 @@ export async function archiveAll() {
   fs.mkdirSync(dataDir, { recursive: true });
 
   await saveJsonToFile(results, filePath);
+
+  await cleanArchive();
 
   return results;
 }
