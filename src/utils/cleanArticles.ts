@@ -107,8 +107,13 @@ async function cleanArchive(): Promise<void> {
         }
       });
 
+      const dailyArchiveDir = path.join(sourceDir, `archive_${currentDate}`);
+      if (!fs.existsSync(dailyArchiveDir)) {
+        fs.mkdirSync(dailyArchiveDir, { recursive: true });
+      }
+
       const outputFilePath = path.join(
-        sourceDir,
+        dailyArchiveDir,
         `archive_${currentDate}.json`
       );
       fs.writeFileSync(
