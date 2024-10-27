@@ -50,14 +50,16 @@ function loadExistingData(sourceDir: string, date: string): Article[] {
 }
 
 async function cleanArchive(): Promise<void> {
-  const existingCheckSums = loadCheckSums();
-  const newCheckSums = new Set(existingCheckSums);
-
-  if (!fs.existsSync(inputFilePath)) {
-    console.error("Input archive file not found.");
+  if (
+    !fs.existsSync(inputFilePath) ||
+    fs.readFileSync(inputFilePath, "utf-8").trim() === ""
+  ) {
+    console.error("Input archive file not found or empty. Skipping process.");
     return;
   }
 
+  const existingCheckSums = loadCheckSums();
+  const newCheckSums = new Set(existingCheckSums);
   const archiveData: ArchiveData = JSON.parse(
     fs.readFileSync(inputFilePath, "utf-8")
   );
@@ -89,18 +91,14 @@ async function cleanArchive(): Promise<void> {
           return;
         }
 
-        if (
-          existingCheckSums.has(article.checkSum) ||
-          newCheckSums.has(article.checkSum)
-        ) {
-          console.log(
-            `Duplicate article detected based on checkSum: ${article.title}`
-          );
-
+        if (existingCheckSums.has(article.checkSum)) {
           if (!duplicates[source]) {
             duplicates[source] = [];
           }
           duplicates[source].push(article);
+          console.log(
+            `Duplicate article detected based on checkSum: ${article.title}`
+          );
         } else {
           newCheckSums.add(article.checkSum);
           mergedData.push(article);
@@ -138,7 +136,8 @@ async function cleanArchive(): Promise<void> {
     console.log(`Duplicate articles saved to ${duplicateFilePath}`);
   }
 
-  console.log("Archive updated and saved.");
+  fs.writeFileSync(inputFilePath, "", "utf-8");
+  console.log("Cleared archive-all.json after processing.");
 }
 
 cleanArchive().catch((error) =>
