@@ -2,9 +2,12 @@
 
 import express, { Request, Response } from "express";
 import { archive, archiveAll } from "./services/archive";
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+app.use(cors());
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
