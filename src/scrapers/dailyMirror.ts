@@ -23,7 +23,9 @@ const dailyMirror = async (url: string) => {
           'a[href*="dailymirror.lk"] h3.cat_title'
         );
         const urlElement = article.querySelector('a[href*="dailymirror.lk"]');
-        const dateElement = article.querySelector("div.timesss h4.timesss");
+        const dateElement = article.querySelector(
+          "div.timesss h4.text-secondary"
+        );
         const bylineElement = article.querySelector("p.text-dark");
 
         const title = titleElement?.textContent?.trim() || "No title";

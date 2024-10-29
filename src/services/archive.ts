@@ -17,7 +17,7 @@ import thinakaran from "../scrapers/thinakaran";
 
 import { getBaseUrl, getNameFromUrl } from "./url";
 import { saveJsonToFile } from "../utils/saveData";
-import cleanArchive from "../utils/cleanArticles";
+import moment from "moment";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
@@ -79,13 +79,13 @@ export async function archiveAll() {
   }
 
   const dataDir = path.join(__dirname, "../data");
-  const filePath = path.join(dataDir, "archive-all.json");
+
+  const timestamp = moment().format("YYYY-MM-DD-HH-mm");
+  const filePath = path.join(dataDir, `archive-${timestamp}-all.json`);
 
   fs.mkdirSync(dataDir, { recursive: true });
 
   await saveJsonToFile(results, filePath);
-
-  await cleanArchive();
 
   return results;
 }
