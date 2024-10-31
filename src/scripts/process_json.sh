@@ -13,6 +13,12 @@ mkdir -p "$ARCHIVE_DIR"
 # Start logging
 echo "Process started at $(date)" >> "$LOG_FILE"
 
+# Initialize counters for the summary
+added_articles=0
+duplicate_count=0
+skip_count=0
+declare -A missing_data_keys
+
 # Loop over each JSON file in the data directory
 for file in "$DATA_DIR"/*.json; do
     filename=$(basename "$file")
@@ -37,21 +43,29 @@ for file in "$DATA_DIR"/*.json; do
 
             # Loop through each item in the data array
             echo "$data_array" | while read -r item; do
-                title=$(echo "$item" | jq -r '.title')
-                href=$(echo "$item" | jq -r '.href')
-                url=$(echo "$item" | jq -r '.url')
-                checkSum=$(echo "$item" | jq -r '.checkSum')
+                # Remove null or empty key-value pairs
+                item=$(echo "$item" | jq 'del(.[] | select(. == null or . == ""))')
 
-                # Skip the entry if title, url, or checkSum is missing or empty
+                title=$(echo "$item" | jq -r '.title // empty')
+                url=$(echo "$item" | jq -r '.url // empty')
+                checkSum=$(echo "$item" | jq -r '.checkSum // empty')
+
+                # Check for missing fields and track missing keys
                 if [ -z "$title" ] || [ -z "$url" ] || [ -z "$checkSum" ]; then
+                    ((skip_count++))
+                    [[ -z "$title" ]] && ((missing_data_keys["title"]++))
+                    [[ -z "$url" ]] && ((missing_data_keys["url"]++))
+                    [[ -z "$checkSum" ]] && ((missing_data_keys["checkSum"]++))
                     echo "Skipped entry with missing title, url, or checksum." >> "$LOG_FILE"
                     continue
                 fi
 
-                timestamp=$(echo "$item" | jq -r '.timestamp')
-                isoTimestamp=$(echo "$item" | jq -r '.isoTimestamp')
-                byline=$(echo "$item" | jq -r '.byline')
-                baseUrl=$(echo "$item" | jq -r '.baseUrl')
+                # Extract other fields with defaults to avoid null
+                href=$(echo "$item" | jq -r '.href // empty')
+                timestamp=$(echo "$item" | jq -r '.timestamp // empty')
+                isoTimestamp=$(echo "$item" | jq -r '.isoTimestamp // empty')
+                byline=$(echo "$item" | jq -r '.byline // empty')
+                baseUrl=$(echo "$item" | jq -r '.baseUrl // empty')
 
                 # Extract date from isoTimestamp to create date-based folder
                 date=$(echo "$isoTimestamp" | cut -d'T' -f1)
@@ -87,8 +101,10 @@ for file in "$DATA_DIR"/*.json; do
                     echo "$checkSum" >> "$key_checksum_file"
                     echo "$url" >> "$key_urls_file"
 
+                    ((added_articles++))
                     echo "Added new entry for date: $date in key: $key" >> "$LOG_FILE"
                 else
+                    ((duplicate_count++))
                     echo "Duplicate entry skipped for checksum: $checkSum" >> "$LOG_FILE"
                 fi
             done
@@ -102,5 +118,15 @@ for file in "$DATA_DIR"/*.json; do
     echo "Moved $filename to archive" >> "$LOG_FILE"
 done
 
+# Summary report
 echo "Process completed at $(date)" >> "$LOG_FILE"
+echo "Summary:" >> "$LOG_FILE"
+echo "Added articles: $added_articles" >> "$LOG_FILE"
+echo "Duplicate entries: $duplicate_count" >> "$LOG_FILE"
+echo "Skipped entries due to missing data: $skip_count" >> "$LOG_FILE"
+echo "Missing data fields:" >> "$LOG_FILE"
+for key in "${!missing_data_keys[@]}"; do
+    echo "  $key: ${missing_data_keys[$key]}" >> "$LOG_FILE"
+done
+
 echo "Processing complete! Data separated by keys and dates in '$OUTPUT_DIR'. Logs saved to '$LOG_FILE'."
