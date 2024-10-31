@@ -31,6 +31,10 @@ for file in "$DATA_DIR"/*.json; do
             key_dir="$OUTPUT_DIR/$key"
             mkdir -p "$key_dir"
 
+            # Key-level checksum and URLs files
+            key_checksum_file="$key_dir/checksum.txt"
+            key_urls_file="$key_dir/urls.txt"
+
             # Loop through each item in the data array
             echo "$data_array" | while read -r item; do
                 title=$(echo "$item" | jq -r '.title')
@@ -46,7 +50,6 @@ for file in "$DATA_DIR"/*.json; do
 
                 timestamp=$(echo "$item" | jq -r '.timestamp')
                 isoTimestamp=$(echo "$item" | jq -r '.isoTimestamp')
-                # Assuming 'byline' and 'baseUrl' are not mandatory for filtering
                 byline=$(echo "$item" | jq -r '.byline')
                 baseUrl=$(echo "$item" | jq -r '.baseUrl')
 
@@ -55,38 +58,34 @@ for file in "$DATA_DIR"/*.json; do
                 date_dir="$key_dir/$date"
                 mkdir -p "$date_dir"
 
-                # Output file and checksum file for each key and date
+                # Output file for articles on specific dates
                 output_file="$date_dir/articles.json"
-                checksum_file="$date_dir/checksum.txt"
-                urls_file="$date_dir/urls.txt"
-
-                # Create the new entry in JSON format
-                new_entry=$(jq -n \
-                    --arg title "$title" \
-                    --arg href "$href" \
-                    --arg byline "$byline" \
-                    --arg timestamp "$timestamp" \
-                    --arg url "$url" \
-                    --arg isoTimestamp "$isoTimestamp" \
-                    --arg baseUrl "$baseUrl" \
-                    --arg checkSum "$checkSum" \
-                    '{title: $title, href: $href, byline: $byline, timestamp: $timestamp, url: $url, isoTimestamp: $isoTimestamp, baseUrl: $baseUrl, checkSum: $checkSum}')
 
                 # If the output file does not exist, create it with an empty JSON array
                 if [ ! -f "$output_file" ]; then
                     echo "[]" > "$output_file"  # Create an empty JSON array
                 fi
 
-                # Check if the checksum already exists in the checksum file
-                if ! grep -q "$checkSum" "$checksum_file" 2>/dev/null; then
-                    # Read existing data, append new entry, and write back to file
+                # Check for duplicate by checking key-level checksum file
+                if ! grep -q "$checkSum" "$key_checksum_file" 2>/dev/null; then
+                    # Append new entry if not duplicated
                     existing_data=$(cat "$output_file")
+                    new_entry=$(jq -n \
+                        --arg title "$title" \
+                        --arg href "$href" \
+                        --arg byline "$byline" \
+                        --arg timestamp "$timestamp" \
+                        --arg url "$url" \
+                        --arg isoTimestamp "$isoTimestamp" \
+                        --arg baseUrl "$baseUrl" \
+                        --arg checkSum "$checkSum" \
+                        '{title: $title, href: $href, byline: $byline, timestamp: $timestamp, url: $url, isoTimestamp: $isoTimestamp, baseUrl: $baseUrl, checkSum: $checkSum}')
                     updated_data=$(echo "$existing_data" | jq ". += [$new_entry]")
                     echo "$updated_data" > "$output_file"
 
-                    # Append checksum and URL to their respective files
-                    echo "$checkSum" >> "$checksum_file"
-                    echo "$url" >> "$urls_file"
+                    # Append checksum and URL to the key-level files
+                    echo "$checkSum" >> "$key_checksum_file"
+                    echo "$url" >> "$key_urls_file"
 
                     echo "Added new entry for date: $date in key: $key" >> "$LOG_FILE"
                 else
