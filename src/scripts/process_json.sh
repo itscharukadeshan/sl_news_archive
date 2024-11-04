@@ -1,14 +1,18 @@
 #!/bin/bash
 
 # Directory paths
-DATA_DIR="../data"                  # Directory containing JSON files
+DATA_DIR="../data"                   # Directory containing JSON files
 OUTPUT_DIR="../data/archive"         # Directory for separated output
-ARCHIVE_DIR="../data/processed_data"     # Directory for storing processed files
-LOG_FILE="../data/process_log.txt"          # Log file for command logs
+ARCHIVE_DIR="../data/processed_data" # Directory for storing processed files
+LOG_FILE="../data/process_log.txt"   # Log file for command logs
+
+# Get the current date for organizing processed data by day
+current_date=$(date +"%Y-%m-%d")
+date_dir="$ARCHIVE_DIR/$current_date"
 
 # Ensure output and archive directories exist
 mkdir -p "$OUTPUT_DIR"
-mkdir -p "$ARCHIVE_DIR"
+mkdir -p "$date_dir"
 
 # Start logging
 echo "Process started at $(date)" >> "$LOG_FILE"
@@ -69,11 +73,11 @@ for file in "$DATA_DIR"/*.json; do
 
                 # Extract date from isoTimestamp to create date-based folder
                 date=$(echo "$isoTimestamp" | cut -d'T' -f1)
-                date_dir="$key_dir/$date"
-                mkdir -p "$date_dir"
+                date_key_dir="$key_dir/$date"
+                mkdir -p "$date_key_dir"
 
                 # Output file for articles on specific dates
-                output_file="$date_dir/articles.json"
+                output_file="$date_key_dir/articles.json"
 
                 # If the output file does not exist, create it with an empty JSON array
                 if [ ! -f "$output_file" ]; then
@@ -113,9 +117,9 @@ for file in "$DATA_DIR"/*.json; do
         fi
     done
 
-    # Move the processed JSON file to the archive directory
-    mv "$file" "$ARCHIVE_DIR/$filename"
-    echo "Moved $filename to archive" >> "$LOG_FILE"
+    # Move the processed JSON file to the date-based archive directory
+    mv "$file" "$date_dir/$filename"
+    echo "Moved $filename to archive in $date_dir" >> "$LOG_FILE"
 done
 
 # Summary report
