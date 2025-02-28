@@ -1,11 +1,9 @@
 /** @format */
-import puppeteer from "puppeteer";
-import { BROWSERLESS_URL } from "../config";
+
+import { launchBrowser } from "../utils/launchBrowser";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-
-const browserWSEndpoint = BROWSERLESS_URL;
 
 interface RawArticle {
   title: string;
@@ -21,7 +19,7 @@ interface ProcessedArticle extends RawArticle {
 }
 
 const ada = async (url: string): Promise<ProcessedArticle[]> => {
-  const browser = await puppeteer.connect({ browserWSEndpoint });
+  const browser = await launchBrowser();
   const page = await browser.newPage();
 
   try {

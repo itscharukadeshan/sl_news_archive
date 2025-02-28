@@ -1,13 +1,11 @@
 /** @format */
-import puppeteer from "puppeteer";
-import { BROWSERLESS_URL } from "../config";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-const browserWSEndpoint = BROWSERLESS_URL;
+import { launchBrowser } from "../utils/launchBrowser";
 
 const adaderana = async (url: string) => {
-  const browser = await puppeteer.connect({ browserWSEndpoint });
+  const browser = await launchBrowser();
   const page = await browser.newPage();
   await page.goto(url, {
     waitUntil: "domcontentloaded",
