@@ -1,14 +1,12 @@
 /** @format */
-import puppeteer from "puppeteer";
-import { BROWSERLESS_URL } from "../config";
+
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-
-const browserWSEndpoint = BROWSERLESS_URL;
+import { launchBrowser } from "../utils/launchBrowser";
 
 const lankadeepa = async (baseUrl: string) => {
   try {
-    const browser = await puppeteer.connect({ browserWSEndpoint });
+    const browser = await launchBrowser();
     const page = await browser.newPage();
 
     const allItems = [];

@@ -1,30 +1,13 @@
 /** @format */
-import puppeteer from "puppeteer";
-import { BROWSERLESS_URL } from "../config";
+
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import getFlareSolverrCookies from "../services/flareSolverr";
-
-const browserWSEndpoint = BROWSERLESS_URL;
+import { launchBrowser } from "../utils/launchBrowser";
 
 const thinakaran = async (url: string) => {
-  let cookies = [];
-  let solvedUrl = url;
-
-  try {
-    const flareSolverrResponse = await getFlareSolverrCookies(url);
-    solvedUrl = flareSolverrResponse.solvedUrl;
-    cookies = flareSolverrResponse.cookies;
-  } catch (error) {
-    console.error("Error with FlareSolverr:", error);
-    throw new Error("Cloudflare bypass failed");
-  }
-
-  const browser = await puppeteer.connect({ browserWSEndpoint });
+  const browser = await launchBrowser();
   const page = await browser.newPage();
-
-  if (cookies.length > 0) await page.setCookie(...cookies);
 
   const scrapeArticles = async () => {
     return await page.evaluate(() => {
