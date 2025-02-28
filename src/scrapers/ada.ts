@@ -67,7 +67,7 @@ const ada = async (url: string): Promise<ProcessedArticle[]> => {
 
     const baseUrl = getBaseUrl(url) || "";
 
-    const updatedData = articles.map((article): ProcessedArticle => {
+    const updatedData = articles.map((article) => {
       const isoTimestamp = normalizeTime(article.timestamp);
       const checkSum = generateChecksum(article.title, article.url);
 
