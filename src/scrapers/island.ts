@@ -14,7 +14,7 @@ interface Article {
 }
 
 const island = async (url: string): Promise<Article[]> => {
-  const browser = await launchBrowser();
+  const browser = await launchBrowser(false);
   const page = await browser.newPage();
   const baseUrl = getBaseUrl(url) || "";
   const articles: Article[] = [];
