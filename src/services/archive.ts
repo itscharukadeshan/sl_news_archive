@@ -14,6 +14,7 @@ import lankadeepa from "../scrapers/lankadeepa";
 import tamilMirror from "../scrapers/tamilMirror";
 import theMorning from "../scrapers/theMorning";
 import thinakaran from "../scrapers/thinakaran";
+import newsWire from "../scrapers/newsWire";
 
 import { getBaseUrl, getNameFromUrl } from "./url";
 import { saveJsonToFile } from "../utils/saveData";
@@ -56,6 +57,7 @@ export async function archive(url: string) {
     [Urls.ADA]: () => ada(url),
     [Urls.THINAKARAN]: () => thinakaran(url),
     [Urls.DINAMINA]: () => thinakaran(url),
+    [Urls.NEWS_WIRE]: () => newsWire(url),
   };
 
   if (urlHandlers[url]) {
