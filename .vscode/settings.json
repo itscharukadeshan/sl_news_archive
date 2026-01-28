@@ -8,5 +8,6 @@
     "SINHALA",
     "THAMILAN",
     "thinakaran"
-  ]
+  ],
+  "snyk.advanced.autoSelectOrganization": true
 }
