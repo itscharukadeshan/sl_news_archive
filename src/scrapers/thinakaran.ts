@@ -3,87 +3,86 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle } from "../types";
 
-const thinakaran = async (url: string) => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
+const MAX_LOAD_MORE_CLICKS = 6;
 
-  const scrapeArticles = async () => {
-    return await page.evaluate(() => {
-      const articleElements = Array.from(document.querySelectorAll("article"));
+const thinakaran = async (url: string): Promise<ProcessedArticle[]> => {
+  const articles: ProcessedArticle[] = [];
 
-      return articleElements.map((article: Element) => {
-        const title =
-          article.querySelector(".penci-entry-title a")?.textContent || "";
-        const url =
-          article.querySelector(".penci-entry-title a")?.getAttribute("href") ||
-          "";
-        const timestamp =
-          article.querySelector("time.entry-date")?.getAttribute("datetime") ||
-          "";
+  await withPage(async (page) => {
+    const scrapeArticles = async () => {
+      return await page.evaluate(() => {
+        const articleElements = Array.from(document.querySelectorAll("article"));
 
-        return { title, url, timestamp };
+        return articleElements.map((article: Element) => {
+          const title =
+            article.querySelector(".penci-entry-title a")?.textContent || "";
+          const url =
+            article.querySelector(".penci-entry-title a")?.getAttribute("href") ||
+            "";
+          const timestamp =
+            article.querySelector("time.entry-date")?.getAttribute("datetime") ||
+            "";
+
+          return { title, url, timestamp };
+        });
       });
-    });
-  };
+    };
 
-  const articles: Array<{
-    title: string;
-    url: string;
-    timestamp: string;
-    checkSum: string;
-    baseUrl: string;
-    isoTimestamp: string;
-  }> = [];
-
-  try {
-    await page.goto(url, { waitUntil: "networkidle2" });
-
-    let totalArticles = 0;
-    let noMorePosts = false;
-
-    while (totalArticles < 70 && !noMorePosts) {
-      const newArticles = await scrapeArticles();
-
-      newArticles.forEach((article) => {
+    const collect = async (): Promise<void> => {
+      const fresh = await scrapeArticles();
+      for (const article of fresh) {
         const checkSum = generateChecksum(article.title, article.url);
-        const baseUrl = getBaseUrl(url);
-
-        const isoTimestamp = normalizeTime(article.timestamp);
-
         if (!articles.some((existing) => existing.checkSum === checkSum)) {
-          articles.push({ ...article, checkSum, baseUrl, isoTimestamp });
+          articles.push({
+            ...article,
+            byline: "",
+            checkSum,
+            baseUrl: getBaseUrl(url),
+            isoTimestamp: normalizeTime(article.timestamp),
+          });
         }
-      });
+      }
+    };
 
-      totalArticles = articles.length;
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    try {
+      await page.waitForSelector("article", { timeout: 15000 });
+    } catch {
+      return; // nothing rendered — return whatever (empty) we have
+    }
+    await collect();
 
-      const loadMoreButton = await page.$(".penci-ajax-more-button");
+    // The old loop clicked as fast as `waitForSelector("article")` resolved
+    // (instantly — articles always exist), hammering the page until the
+    // target crashed (TargetCloseError). Now: wait for the count to grow,
+    // and bail with partial results on any hiccup.
+    for (let i = 0; i < MAX_LOAD_MORE_CLICKS && articles.length < 70; i++) {
+      try {
+        const loadMoreButton = await page.$(".penci-ajax-more-button");
+        if (!loadMoreButton) break;
 
-      if (loadMoreButton) {
         const isDisabled = await page.evaluate(
           (btn) => btn.getAttribute("aria-disabled") === "true",
           loadMoreButton
         );
+        if (isDisabled) break;
 
-        if (isDisabled) {
-          noMorePosts = true;
-          break;
-        }
-
+        const prev = articles.length;
         await loadMoreButton.click();
-        await page.waitForSelector("article", { timeout: 6000 });
-      } else {
+        await page.waitForFunction(
+          (p: number) => document.querySelectorAll("article").length > p,
+          { timeout: 8000 },
+          prev
+        );
+        await collect();
+      } catch {
         break;
       }
     }
-  } catch (error) {
-    console.error("Error during scraping:", error);
-    return articles;
-  } finally {
-    await browser.close();
-  }
+  });
 
   return articles.slice(0, 70);
 };

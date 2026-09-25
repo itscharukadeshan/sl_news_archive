@@ -3,81 +3,79 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 
-interface Article {
-  title: string;
-  url: string;
-  timestamp: string;
-  byline: string;
-  checkSum?: string;
-}
+const island = async (url: string): Promise<ProcessedArticle[]> => {
+  return withPage(async (page) => {
+    const baseUrl = getBaseUrl(url) || "";
+    const articles: RawArticle[] = [];
+    const uniqueUrls = new Set<string>();
 
-const island = async (url: string): Promise<Article[]> => {
-  const browser = await launchBrowser(false);
-  const page = await browser.newPage();
-  const baseUrl = getBaseUrl(url) || "";
-  const articles: Article[] = [];
-  const uniqueUrls = new Set<string>();
-
-  const scrapeArticles = async (): Promise<void> => {
-    const pageArticles = await page.evaluate(() => {
-      const articlesList: Article[] = [];
-      const articleElements = document.querySelectorAll<HTMLElement>(
-        "li.mvp-blog-story-wrap"
-      );
-
-      articleElements.forEach((article) => {
-        const linkElement = article.querySelector<HTMLAnchorElement>("a");
-        if (!linkElement) return;
-
-        const url = linkElement.href;
-        const titleElement = article.querySelector<HTMLElement>("h2");
-        if (!titleElement || !url) return;
-
-        const title = titleElement.textContent?.trim() ?? "";
-
-        const timeElement =
-          article.querySelector<HTMLElement>("span.mvp-cd-date");
-
-        const time = timeElement?.textContent?.trim() ?? "";
-
-        const descriptionElement = article.querySelector<HTMLElement>(
-          "div.mvp-blog-story-text p"
+    const scrapeArticles = async (): Promise<void> => {
+      const pageArticles = await page.evaluate(() => {
+        const articlesList: {
+          title: string;
+          url: string;
+          byline: string;
+          timestamp: string;
+        }[] = [];
+        const articleElements = document.querySelectorAll<HTMLElement>(
+          "li.mvp-blog-story-wrap"
         );
-        const byline = descriptionElement?.textContent?.trim() ?? "";
 
-        if (title && url) {
-          articlesList.push({
-            title,
-            url,
-            byline,
-            timestamp: time,
-          });
-        }
+        articleElements.forEach((article) => {
+          const linkElement = article.querySelector<HTMLAnchorElement>("a");
+          if (!linkElement) return;
+
+          const url = linkElement.href;
+          const titleElement = article.querySelector<HTMLElement>("h2");
+          if (!titleElement || !url) return;
+
+          const title = titleElement.textContent?.trim() ?? "";
+
+          const timeElement =
+            article.querySelector<HTMLElement>("span.mvp-cd-date");
+
+          const time = timeElement?.textContent?.trim() ?? "";
+
+          const descriptionElement = article.querySelector<HTMLElement>(
+            "div.mvp-blog-story-text p"
+          );
+          const byline = descriptionElement?.textContent?.trim() ?? "";
+
+          if (title && url) {
+            articlesList.push({
+              title,
+              url,
+              byline,
+              timestamp: time,
+            });
+          }
+        });
+
+        return articlesList;
       });
 
-      return articlesList;
-    });
+      pageArticles.forEach((article) => {
+        if (!uniqueUrls.has(article.url)) {
+          uniqueUrls.add(article.url);
+          articles.push(article);
+        }
+      });
+    };
 
-    pageArticles.forEach((article) => {
-      if (!uniqueUrls.has(article.url)) {
-        uniqueUrls.add(article.url);
-        articles.push(article);
+    const clickMorePosts = async (): Promise<void> => {
+      const morePostsButton = await page.$("a.mvp-inf-more-but");
+      if (morePostsButton) {
+        await morePostsButton.click();
+        await page.waitForNetworkIdle();
+        await page.waitForSelector("li.mvp-blog-story-wrap", {
+          timeout: 5000,
+        });
       }
-    });
-  };
+    };
 
-  const clickMorePosts = async (): Promise<void> => {
-    const morePostsButton = await page.$("a.mvp-inf-more-but");
-    if (morePostsButton) {
-      await morePostsButton.click();
-      await page.waitForNetworkIdle();
-      await page.waitForSelector("li.mvp-blog-story-wrap", { timeout: 5000 });
-    }
-  };
-
-  try {
     await page.goto(url, { waitUntil: "networkidle2" });
     await scrapeArticles();
     for (let i = 0; i < 4; i++) {
@@ -85,25 +83,20 @@ const island = async (url: string): Promise<Article[]> => {
       await scrapeArticles();
     }
 
-    const updatedData = articles.map((article) => {
-      const checkSum = generateChecksum(article.title, article.url);
-      const isoTimestamp = normalizeTime(article.timestamp);
+    return articles.map(
+      (article): ProcessedArticle => {
+        const checkSum = generateChecksum(article.title, article.url);
+        const isoTimestamp = normalizeTime(article.timestamp);
 
-      return {
-        ...article,
-        isoTimestamp,
-        baseUrl,
-        checkSum,
-      };
-    });
-
-    return updatedData;
-  } catch (error) {
-    console.error("Error during scraping:", error);
-    return articles;
-  } finally {
-    await page.close();
-  }
+        return {
+          ...article,
+          isoTimestamp,
+          baseUrl,
+          checkSum,
+        };
+      }
+    );
+  });
 };
 
 export default island;

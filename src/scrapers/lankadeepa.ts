@@ -2,14 +2,12 @@
 
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 
-const lankadeepa = async (baseUrl: string) => {
-  try {
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-
-    const allItems = [];
+const lankadeepa = async (baseUrl: string): Promise<ProcessedArticle[]> => {
+  return withPage(async (page) => {
+    const allItems: RawArticle[] = [];
 
     for (let i = 0; i < 3; i++) {
       const pageNumber = i * 30;
@@ -66,7 +64,7 @@ const lankadeepa = async (baseUrl: string) => {
       allItems.push(...items);
     }
 
-    const updatedData = allItems.map((article) => {
+    return allItems.map((article) => {
       const checkSum = generateChecksum(article.title, article.url);
       const isoTimestamp = normalizeTime(article.timestamp || "No timestamp");
 
@@ -77,11 +75,7 @@ const lankadeepa = async (baseUrl: string) => {
         checkSum,
       };
     });
-
-    return updatedData;
-  } catch (error) {
-    console.log(error);
-  }
+  });
 };
 
 export default lankadeepa;

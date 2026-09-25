@@ -3,13 +3,11 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle } from "../types";
 
-const dailyMirror = async (url: string) => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
-
-  try {
+const dailyMirror = async (url: string): Promise<ProcessedArticle[]> => {
+  return withPage(async (page) => {
     await page.goto(url, {
       waitUntil: "domcontentloaded",
     });
@@ -44,7 +42,7 @@ const dailyMirror = async (url: string) => {
 
     const baseUrl = getBaseUrl(url) || "";
 
-    const updatedData = articles.map((article) => {
+    return articles.map((article) => {
       const timestamp = article.timestamp as string;
       const checkSum = generateChecksum(article.title, article.url);
       const isoTimestamp = normalizeTime(timestamp);
@@ -57,14 +55,7 @@ const dailyMirror = async (url: string) => {
         checkSum,
       };
     });
-
-    await browser.close();
-    return updatedData;
-  } catch (error) {
-    console.error("Error scraping Daily Mirror:", error);
-    await browser.close();
-    throw error;
-  }
+  });
 };
 
 export default dailyMirror;

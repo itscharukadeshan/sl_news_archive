@@ -3,27 +3,13 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
-
-interface RawArticle {
-  title: string;
-  url: string;
-  timestamp: string;
-  byline: string;
-}
-
-interface ProcessedArticle extends RawArticle {
-  isoTimestamp: string;
-  baseUrl: string;
-  checkSum: string;
-}
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 
 const economyNext = async (baseUrl: string): Promise<ProcessedArticle[]> => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
-  const allArticles: ProcessedArticle[] = [];
+  return withPage(async (page) => {
+    const allArticles: ProcessedArticle[] = [];
 
-  try {
     for (let i = 1; i <= 2; i++) {
       const url = i === 1 ? baseUrl : `${baseUrl}/page/${i}/`;
       await page.goto(url, { waitUntil: "domcontentloaded" });
@@ -84,13 +70,8 @@ const economyNext = async (baseUrl: string): Promise<ProcessedArticle[]> => {
       allArticles.push(...updatedData);
     }
 
-    await browser.close();
     return allArticles;
-  } catch (error) {
-    console.error("Error scraping EconomyNext:", error);
-    await browser.close();
-    throw error;
-  }
+  });
 };
 
 export default economyNext;

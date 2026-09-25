@@ -3,26 +3,11 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
-
-interface RawArticle {
-  title: string;
-  url: string;
-  timestamp: string;
-  byline: string;
-}
-
-interface ProcessedArticle extends RawArticle {
-  isoTimestamp: string;
-  baseUrl: string;
-  checkSum: string;
-}
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 
 const tamilMirror = async (url: string): Promise<ProcessedArticle[]> => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
-
-  try {
+  return withPage(async (page) => {
     await page.goto(url, {
       waitUntil: "domcontentloaded",
     });
@@ -71,7 +56,7 @@ const tamilMirror = async (url: string): Promise<ProcessedArticle[]> => {
 
     const baseUrl = getBaseUrl(url) || "";
 
-    const updatedData = articles.map((article): ProcessedArticle => {
+    return articles.map((article): ProcessedArticle => {
       const isoTimestamp = normalizeTime(article.timestamp);
       const checkSum = generateChecksum(article.title, article.url);
 
@@ -82,14 +67,7 @@ const tamilMirror = async (url: string): Promise<ProcessedArticle[]> => {
         checkSum,
       };
     });
-
-    await browser.close();
-    return updatedData;
-  } catch (error) {
-    console.error("Error scraping Tamil Mirror:", error);
-    await browser.close();
-    throw error;
-  }
+  });
 };
 
 export default tamilMirror;

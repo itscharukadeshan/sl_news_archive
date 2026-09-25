@@ -3,28 +3,13 @@
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
-import { launchBrowser } from "../utils/launchBrowser";
-
-interface RawArticle {
-  title: string;
-  url: string;
-  timestamp: string;
-  byline: string;
-}
-
-interface ProcessedArticle extends RawArticle {
-  isoTimestamp: string;
-  baseUrl: string;
-  checkSum: string;
-}
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 
 const newsWire = async (url: string): Promise<ProcessedArticle[]> => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
+  return withPage(async (page) => {
+    const allArticles: ProcessedArticle[] = [];
 
-  const allArticles: ProcessedArticle[] = [];
-
-  try {
     const urls = [url, `${url}page/2/`, `${url}page/3/`];
 
     for (const currentUrl of urls) {
@@ -87,13 +72,8 @@ const newsWire = async (url: string): Promise<ProcessedArticle[]> => {
       allArticles.push(...updatedData);
     }
 
-    await browser.close();
     return allArticles;
-  } catch (error) {
-    console.error("Error scraping News Wire:", error);
-    await browser.close();
-    throw error;
-  }
+  });
 };
 
 export default newsWire;

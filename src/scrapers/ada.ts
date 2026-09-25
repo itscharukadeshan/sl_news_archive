@@ -1,31 +1,28 @@
 /** @format */
 
-import { launchBrowser } from "../utils/launchBrowser";
+import { withPage } from "../utils/launchBrowser";
+import type { ProcessedArticle, RawArticle } from "../types";
 import { getBaseUrl } from "../services/url";
 import { generateChecksum } from "../utils/generateChecksum";
 import normalizeTime from "../utils/normalizeTime";
 
-interface RawArticle {
-  title: string;
-  url: string;
-  timestamp: string;
-  byline: string;
-}
-
-interface ProcessedArticle extends RawArticle {
-  isoTimestamp: string;
-  baseUrl: string;
-  checkSum: string;
-}
-
 const ada = async (url: string): Promise<ProcessedArticle[]> => {
-  const browser = await launchBrowser();
-  const page = await browser.newPage();
+  // Slow TTFB headless: default 15s nav timeout flaked in production.
+  return withPage(
+    async (page) => {
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+      });
 
-  try {
-    await page.goto(url, {
-      waitUntil: "domcontentloaded",
-    });
+      // The list shell renders without rows when the site withholds
+      // content from headless clients — fail loudly instead of [].
+      try {
+        await page.waitForSelector(".cat-b-row h5 a", { timeout: 20000 });
+      } catch {
+        throw new Error(
+          "ada: article list did not render (site withholds content from headless clients)"
+        );
+      }
 
     const articles = await page.evaluate(() => {
       const articleElements = document.querySelectorAll(
@@ -67,7 +64,7 @@ const ada = async (url: string): Promise<ProcessedArticle[]> => {
 
     const baseUrl = getBaseUrl(url) || "";
 
-    const updatedData = articles.map((article) => {
+    return articles.map((article) => {
       const isoTimestamp = normalizeTime(article.timestamp);
       const checkSum = generateChecksum(article.title, article.url);
 
@@ -78,14 +75,9 @@ const ada = async (url: string): Promise<ProcessedArticle[]> => {
         checkSum,
       };
     });
-
-    await browser.close();
-    return updatedData;
-  } catch (error) {
-    console.error("Error scraping ada lk:", error);
-    await browser.close();
-    throw error;
-  }
+    },
+    { navigationTimeoutMs: 30000 }
+  );
 };
 
 export default ada;
