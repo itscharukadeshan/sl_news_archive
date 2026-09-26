@@ -74,7 +74,10 @@ async function retryFetch(
     } catch (error) {
       console.error(`Attempt ${attempt} failed: ${error}`);
       if (attempt === retries) {
-        return { success: false, error };
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
       }
       // Exponential backoff: 1s, 2s, 4s…
       await new Promise((resolve) =>

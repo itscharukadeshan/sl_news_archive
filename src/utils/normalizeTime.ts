@@ -16,12 +16,18 @@ const FORMATS = [
   "DD-MM-YYYY",
   "MM/DD/YYYY",
   "MMMM D, YYYY",
+  "MMM D, YYYY",
   "YYYY/MM/DD",
   "YYYY-MM-DDTHH:mm:ssZ",
   "HH:mm:ss",
   "MM-DD-YYYY HH:mm",
   "DD/MM/YYYY HH:mm",
   "MMMM D, YYYY h:mm a",
+  "MMMM D, YYYY hh:mm A",
+  "MMM D, YYYY h:mm A",
+  "MMM D, YYYY hh:mm A",
+  "MMM DD, YYYY HH:mm",
+  "MMM D, YYYY HH:mm",
 ];
 
 const MISSING = new Set(["", "no title", "no timestamp", "no date", "no date available"]);
@@ -36,24 +42,33 @@ const normalizeTime = (input: string): string | null => {
   const trimmed = input.trim();
   if (!trimmed || MISSING.has(trimmed.toLowerCase())) return null;
 
-  // Relative times: "5 minutes ago", "2 hours ago", "3 days ago"
+  // Relative times: "5 minutes ago", "2 hours ago", "3 days ago",
+  // plus short Next.js forms: "11m ago", "35m ago", "2h ago", "10s ago", "3d ago"
   if (/ago/i.test(trimmed)) {
-    const match = trimmed.match(/(\d+)\s*(minute|hour|day|week|month|year)s?/i);
+    const longMatch = trimmed.match(
+      /(\d+)\s*(second|minute|hour|day|week|month|year)s?/i
+    );
+    const shortMatch = trimmed.match(/(\d+)\s*([smhd])\b/i);
+    const match = longMatch ?? shortMatch;
     if (!match) return null;
     const amount = parseInt(match[1], 10);
     const unitRaw = match[2].toLowerCase();
     const unit =
-      unitRaw.startsWith("minute") ? "minute"
-      : unitRaw.startsWith("hour") ? "hour"
-      : unitRaw.startsWith("day") ? "day"
+      unitRaw.startsWith("s") ? "second"
+      : unitRaw.startsWith("minute") || unitRaw === "m" ? "minute"
+      : unitRaw.startsWith("hour") || unitRaw === "h" ? "hour"
+      : unitRaw.startsWith("day") || unitRaw === "d" ? "day"
       : unitRaw.startsWith("week") ? "week"
       : unitRaw.startsWith("month") ? "month"
       : "year";
     return dayjs().tz(TIMEZONE).subtract(amount, unit).format();
   }
 
-  // Try strict custom formats first, then loose/ISO parse in-zone.
+  // Non-strict dayjs parsing accepts garbage ("Sep 25, 2026" as
+  // YYYY-MM-DD -> year 2028), so strict-validate the shape first and
+  // only then interpret the wall time in-zone.
   for (const fmt of FORMATS) {
+    if (!dayjs(trimmed, fmt, true).isValid()) continue;
     const d = dayjs.tz(trimmed, fmt, TIMEZONE);
     if (d.isValid()) return (d as dayjs.Dayjs).tz(TIMEZONE).format();
   }
